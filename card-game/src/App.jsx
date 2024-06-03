@@ -62,31 +62,71 @@ function App() {
 
   const [score, setScore] = React.useState(0);
   const [hand, setHand] = React.useState([]);
+  const [dealtCards, setDealtCards] = React.useState(new Set())
 
-  function increaseScore() {
-    setScore(score + 1);
+  React.useEffect(() => {
+    dealInitialCards();
+  }, []);
+
+   // Function to update the dealt cards set
+   // maybe too extrapolated, can condense into other methods
+   function addCardToDealtCards(cardIndex) {
+    setDealtCards((prevSet) => {
+      const newSet = new Set(prevSet);
+      newSet.add(cardIndex);
+      return newSet;
+    });
   }
+
+  function dealRandomCard() {
+    let newCardIndex;
+    do {
+      newCardIndex = Math.floor(Math.random() * cardData.length);
+    } while (dealtCards.has(newCardIndex));
+
+    addCardToDealtCards(newCardIndex);
+    return newCardIndex;
+  }
+
+  // deals 2 cards
+  function dealInitialCards() {
+    const newHand = [];
+    let newScore = 0;
+    const newDealtCards = new Set();
+    for (let i = 0; i < 2; i++) {
+      let newCardIndex;
+      // check to ensure we don't get duplicate cards as we aren't setting dealt cards till after we roll both
+      do {
+      newCardIndex = Math.floor(Math.random() * cardData.length);
+      } while (newDealtCards.has(newCardIndex));
+
+      newHand.push(newCardIndex);
+      newScore += cardData[newCardIndex].value;
+      newDealtCards.add(newCardIndex);
+    }
+    setHand(newHand);
+    setScore(newScore);
+    setDealtCards(newDealtCards);
+  }
+
+  //adds new card
   function addNewCard() {
-    // random card
-    const newCard = Math.floor(Math.random() * cardData.length);
-
-    // update player's hand
-    const handCopy = [...hand]; // spread operator: deep copy array
-    handCopy.push(newCard);
-    setHand(handCopy);
-
-    // update score
-    setScore(score + cardData[newCard].value);
+    const newCardIndex = dealRandomCard();
+    setHand((prevHand) => [...prevHand, newCardIndex]);
+    setScore((prevScore) => prevScore + cardData[newCardIndex].value);
   }
 
+  // resets the game state
   function clearHand() {
     setHand([]);
     setScore(0);
-}
+    setDealtCards(new Set());
+    dealInitialCards();
+  }
 
   return (
     <div className="App">
-      <h1>Card Game</h1>
+      <h1>Blackjack</h1>
       <p>Score: {score}</p>
 
       {/* <button onClick={increaseScore}>Add Score</button> */}
@@ -99,14 +139,6 @@ function App() {
         {hand.map((c) => <Card card={cardData[c]} />)}
       </div>
 
- {/*
-      <div className="hand">
-        <Card card={cardData[0]} />
-        <Card card={cardData[13]} />
-        <Card card={cardData[26]} />
-        <Card card={cardData[39]} />
-      </div>
-  */}
       {score === 21 && <h1>You won!</h1>}
       {score > 21 && <h1>You lost</h1>}
     </div>

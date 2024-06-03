@@ -68,23 +68,19 @@ function App() {
     dealInitialCards();
   }, []);
 
-   // Function to update the dealt cards set
-   // maybe too extrapolated, can condense into other methods
-   function addCardToDealtCards(cardIndex) {
-    setDealtCards((prevSet) => {
-      const newSet = new Set(prevSet);
-      newSet.add(cardIndex);
-      return newSet;
-    });
-  }
-
-  function dealRandomCard() {
+  //deals random card and ensures it's not a duplicate in dealtCards set
+  function dealRandomCard(dealtCards) {
     let newCardIndex;
     do {
       newCardIndex = Math.floor(Math.random() * cardData.length);
     } while (dealtCards.has(newCardIndex));
 
-    addCardToDealtCards(newCardIndex);
+
+    dealtCards.add(newCardIndex);
+
+    // cardData[newCardIndex].value == 1
+    // 0 13 26 39 indexes of aces
+
     return newCardIndex;
   }
 
@@ -94,12 +90,7 @@ function App() {
     let newScore = 0;
     const newDealtCards = new Set();
     for (let i = 0; i < 2; i++) {
-      let newCardIndex;
-      // check to ensure we don't get duplicate cards as we aren't setting dealt cards till after we roll both
-      do {
-      newCardIndex = Math.floor(Math.random() * cardData.length);
-      } while (newDealtCards.has(newCardIndex));
-
+      const newCardIndex = dealRandomCard(newDealtCards);
       newHand.push(newCardIndex);
       newScore += cardData[newCardIndex].value;
       newDealtCards.add(newCardIndex);
@@ -124,6 +115,34 @@ function App() {
     dealInitialCards();
   }
 
+  function testDealInitialCards() {
+    const numTests = 1000; // Number of tests to run
+    const duplicates = new Set(); // Set to store duplicate cards
+  
+    for (let i = 0; i < numTests; i++) {
+      const newDealtCards = new Set();
+      dealInitialCards(); // Run dealInitialCards()
+      hand.forEach(cardIndex => {
+        if (newDealtCards.has(cardIndex)) {
+          // If the card has already been dealt in this hand, it's a duplicate
+          duplicates.add(cardIndex);
+        } else {
+          newDealtCards.add(cardIndex);
+        }
+      });
+    }
+  
+    if (duplicates.size > 0) {
+      console.log("Duplicates found:");
+      duplicates.forEach(cardIndex => {
+        console.log(cardData[cardIndex]);
+      });
+    } else {
+      console.log("No duplicates found in", numTests, "tests.");
+    }
+  }
+  
+
   return (
     <div className="App">
       <h1>Blackjack</h1>
@@ -141,6 +160,7 @@ function App() {
 
       {score === 21 && <h1>You won!</h1>}
       {score > 21 && <h1>You lost</h1>}
+      
     </div>
   );
 

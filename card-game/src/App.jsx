@@ -187,20 +187,6 @@ function App() {
   return (
     <div className="App">
       <h1>Blackjack</h1>
-      <p>Player Score: {playerScore}</p>
-      <div className="hand">
-        {playerHand.map((c) => <Card key={c} card={cardData[c]} />)}
-      </div>
-      <p>Dealer Score: {gameOver ? dealerScore : '?'}</p>
-      <div className="hand">
-        {dealerHand.map((c, index) =>
-          index === 0 || gameOver ? (
-            <Card key={index} card={cardData[c]} />
-          ) : (
-            <Card key={index} card={{ img: './cards/back_of_card.svg' }} />
-          )
-        )}
-      </div>
       {aceChoice && (
         <div>
           <button onClick={() => handleAceChoice(1)}>Count Ace as 1</button>
@@ -213,6 +199,22 @@ function App() {
           <button onClick={handleStand}>Stand</button>
         </div>
       )}
+      <p>Dealer's Hand ({gameOver ? dealerScore : '?'})</p>
+      <div className="hand">
+        {dealerHand.map((c, index) =>
+          index === 0 || gameOver ? (
+            <Card key={index} card={cardData[c]} />
+          ) : (
+            <Card key={index} card={{ img: './cards/back_of_card.svg' }} />
+          )
+        )}
+      </div>
+      <p>Your Hand ({playerScore})</p>
+      <div className="hand">
+        {playerHand.map((c) => <Card key={c} card={cardData[c]} />)}
+      </div>
+      
+      
       <button onClick={clearHand}>New Game</button>
       {gameOver && <h1>{determineWinner()}</h1>}
     </div>

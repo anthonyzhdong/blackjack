@@ -59,112 +59,165 @@ const cardData = [
 ];
 
 function App() {
-
-  const [score, setScore] = React.useState(0);
-  const [hand, setHand] = React.useState([]);
-  const [dealtCards, setDealtCards] = React.useState(new Set())
+  const [playerScore, setPlayerScore] = React.useState(0);
+  const [playerHand, setPlayerHand] = React.useState([]);
+  const [dealerScore, setDealerScore] = React.useState(0);
+  const [dealerHand, setDealerHand] = React.useState([]);
+  const [dealtCards, setDealtCards] = React.useState(new Set());
+  const [aceChoice, setAceChoice] = React.useState(false);
+  const [aceCardIndex, setAceCardIndex] = React.useState(null);
+  const [playerTurn, setPlayerTurn] = React.useState(true);
+  const [gameOver, setGameOver] = React.useState(false);
 
   React.useEffect(() => {
     dealInitialCards();
   }, []);
 
-  //deals random card and ensures it's not a duplicate in dealtCards set
+  React.useEffect(() => {
+    if (!playerTurn && !gameOver) {
+      dealDealerCards();
+    }
+  }, [playerTurn, gameOver]);
+
   function dealRandomCard(dealtCards) {
     let newCardIndex;
     do {
       newCardIndex = Math.floor(Math.random() * cardData.length);
     } while (dealtCards.has(newCardIndex));
 
-
     dealtCards.add(newCardIndex);
-
-    // cardData[newCardIndex].value == 1
-    // 0 13 26 39 indexes of aces
-
     return newCardIndex;
   }
 
-  // deals 2 cards
   function dealInitialCards() {
-    const newHand = [];
-    let newScore = 0;
+    const newPlayerHand = [];
+    let newPlayerScore = 0;
+
+    const newDealerHand = [];
+    let newDealerScore = 0;
+
     const newDealtCards = new Set();
     for (let i = 0; i < 2; i++) {
-      const newCardIndex = dealRandomCard(newDealtCards);
-      newHand.push(newCardIndex);
-      newScore += cardData[newCardIndex].value;
-      newDealtCards.add(newCardIndex);
+      const newPlayerCardIndex = dealRandomCard(newDealtCards);
+      if (cardData[newPlayerCardIndex].value !== 1) {
+        newPlayerHand.push(newPlayerCardIndex);
+        newPlayerScore += cardData[newPlayerCardIndex].value;
+      } else {
+        setAceChoice(true);
+        setAceCardIndex(newPlayerCardIndex);
+      }
+
+      const newDealerCardIndex = dealRandomCard(newDealtCards);
+      newDealerHand.push(newDealerCardIndex);
+      newDealerScore += cardData[newDealerCardIndex].value;
     }
-    setHand(newHand);
-    setScore(newScore);
+
+    setPlayerHand(newPlayerHand);
+    setPlayerScore(newPlayerScore);
+    setDealerHand(newDealerHand);
+    setDealerScore(newDealerScore);
     setDealtCards(newDealtCards);
   }
 
-  //adds new card
   function addNewCard() {
-    const newCardIndex = dealRandomCard();
-    setHand((prevHand) => [...prevHand, newCardIndex]);
-    setScore((prevScore) => prevScore + cardData[newCardIndex].value);
+    if (!aceChoice && playerTurn && !gameOver) {
+      const newCardIndex = dealRandomCard(dealtCards);
+      if (cardData[newCardIndex].value === 1) {
+        setAceChoice(true);
+        setAceCardIndex(newCardIndex);
+      } else {
+        setPlayerHand((prevHand) => [...prevHand, newCardIndex]);
+        setPlayerScore((prevScore) => {
+          const newScore = prevScore + cardData[newCardIndex].value;
+          if (newScore > 21) setGameOver(true);
+          return newScore;
+        });
+      }
+    }
   }
 
-  // resets the game state
   function clearHand() {
-    setHand([]);
-    setScore(0);
+    setPlayerHand([]);
+    setPlayerScore(0);
+    setDealerHand([]);
+    setDealerScore(0);
     setDealtCards(new Set());
+    setAceChoice(false);
+    setAceCardIndex(null);
+    setPlayerTurn(true);
+    setGameOver(false);
     dealInitialCards();
   }
 
-  function testDealInitialCards() {
-    const numTests = 1000; // Number of tests to run
-    const duplicates = new Set(); // Set to store duplicate cards
-  
-    for (let i = 0; i < numTests; i++) {
-      const newDealtCards = new Set();
-      dealInitialCards(); // Run dealInitialCards()
-      hand.forEach(cardIndex => {
-        if (newDealtCards.has(cardIndex)) {
-          // If the card has already been dealt in this hand, it's a duplicate
-          duplicates.add(cardIndex);
-        } else {
-          newDealtCards.add(cardIndex);
-        }
-      });
-    }
-  
-    if (duplicates.size > 0) {
-      console.log("Duplicates found:");
-      duplicates.forEach(cardIndex => {
-        console.log(cardData[cardIndex]);
-      });
-    } else {
-      console.log("No duplicates found in", numTests, "tests.");
-    }
+  function handleAceChoice(value) {
+    setPlayerHand((prevHand) => [...prevHand, aceCardIndex]);
+    setPlayerScore((prevScore) => {
+      const newScore = prevScore + value;
+      if (newScore > 21) setGameOver(true);
+      return newScore;
+    });
+    setAceChoice(false);
+    setAceCardIndex(null);
   }
-  
+
+  function handleStand() {
+    setPlayerTurn(false);
+  }
+
+  function dealDealerCards() {
+    let newDealerScore = dealerScore;
+    const newDealerHand = [...dealerHand];
+    while (newDealerScore < 17) {
+      const newCardIndex = dealRandomCard(dealtCards);
+      newDealerHand.push(newCardIndex);
+      newDealerScore += cardData[newCardIndex].value;
+    }
+    setDealerHand(newDealerHand);
+    setDealerScore(newDealerScore);
+    setGameOver(true);
+  }
+
+  function determineWinner() {
+    if (playerScore > 21) return 'You lost!';
+    if (dealerScore > 21 || playerScore > dealerScore) return 'You won!';
+    if (playerScore < dealerScore) return 'You lost!';
+    return 'It\'s a tie!';
+  }
 
   return (
     <div className="App">
       <h1>Blackjack</h1>
-      <p>Score: {score}</p>
-
-      {/* <button onClick={increaseScore}>Add Score</button> */}
-
-      <button onClick={addNewCard} disabled={score >= 21} >New Card</button>
-
-      <button onClick={clearHand} >New Game</button>
-      
+      <p>Player Score: {playerScore}</p>
       <div className="hand">
-        {hand.map((c) => <Card card={cardData[c]} />)}
+        {playerHand.map((c) => <Card key={c} card={cardData[c]} />)}
       </div>
-
-      {score === 21 && <h1>You won!</h1>}
-      {score > 21 && <h1>You lost</h1>}
-      
+      <p>Dealer Score: {gameOver ? dealerScore : '?'}</p>
+      <div className="hand">
+        {dealerHand.map((c, index) =>
+          index === 0 || gameOver ? (
+            <Card key={index} card={cardData[c]} />
+          ) : (
+            <Card key={index} card={{ img: './cards/back_of_card.svg' }} />
+          )
+        )}
+      </div>
+      {aceChoice && (
+        <div>
+          <button onClick={() => handleAceChoice(1)}>Count Ace as 1</button>
+          <button onClick={() => handleAceChoice(11)}>Count Ace as 11</button>
+        </div>
+      )}
+      {!gameOver && (
+        <div>
+          <button onClick={addNewCard} disabled={playerScore >= 21 || aceChoice}>Hit</button>
+          <button onClick={handleStand}>Stand</button>
+        </div>
+      )}
+      <button onClick={clearHand}>New Game</button>
+      {gameOver && <h1>{determineWinner()}</h1>}
     </div>
   );
-
-
 }
 
-export default App; // exported so index.js can load it
+export default App;
+

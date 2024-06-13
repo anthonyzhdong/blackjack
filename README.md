@@ -19,3 +19,10 @@ features added
 June 4 - added buttons for user to choose 1 or 11 if they roll a Ace
 -> dealer hands
 -> hit and stand feature
+
+June 6 
+- dealing with soft aces is really hard, as we have to consistently check and optimise the hand accordingly. going to try find a solution for this soon
+
+June 13
+- added back of card
+- handler for ace

@@ -71,20 +71,29 @@ function App() {
   //deck of dealt cards
   const [dealtCards, setDealtCards] = React.useState(new Set());
 
-  //did we roll a dice & score using ace 11
+  //did we roll an ace? If we did, keep a track of score using ace (11)
   const [rolledAce, setRolledAce] = React.useState(false);
   const [ace11Score, setAce11Score] = React.useState(0);
+
+  //did the dealer roll an ace? If they did, keep a track of score using ace (11)
+  const [dealerAce, setDealerAce] = React.useState(false);
+  const [dealerAceScore, setDealerAceScore] = React.useState(0);
 
   //player turn & game over
   const [playerTurn, setPlayerTurn] = React.useState(true);
   const [gameOver, setGameOver] = React.useState(false);
 
+  const [money, setMoney] = React.useState(500);
+  const [bet, setBet] = React.useState(0);
 
+  //enter amount then game begins
+
+  //start
   React.useEffect(() => {
     dealInitialCards();
   }, []);
 
-  // dealers turn and game isn't over, deal dealers cards
+  // dealers turn and player didn't bust
   React.useEffect(() => {
     if (!playerTurn && !gameOver) {
       dealDealerCards();
@@ -102,70 +111,64 @@ function App() {
     return newCardIndex;
   }
 
-
-// how to handle aces
-// if u roll a ace, show high aswell
-// if high is above 21 then flip boolean
-// if player stands, choose high > low if boolean
-// edge case of double aces? -> come to that later
-
   // deals initial hand for player and dealer
   function dealInitialCards() {
-    const newPlayerHand = [];
-    let newPlayerScore = 0;
-    let ace11Score = 0;
-    let aceShowed = false;
-
-    const newDealerHand = [];
-    let newDealerScore = 0;
-
     const newDealtCards = new Set();
+    const playerStartingHand = [];
+    let playerStartingScore = 0;
+    let playerStartingAceShowed = false;
+    let playerStartingAceScore = 0;
+
+    const dealerStartingHand = [];
+    let dealerStartingScore = 0;
+    let dealerAceBoolean = false;
+    let dealerAce11Score = 0;
+
+    // 2 cards each
     for (let i = 0; i < 2; i++) {
-      const newPlayerCardIndex = dealRandomCard(newDealtCards);
-      newPlayerHand.push(newPlayerCardIndex);
-      // ace check to determine if we want 1 or 11
-      // if (cardData[newPlayerCardIndex].value !== 1) {
-         newPlayerScore += cardData[newPlayerCardIndex].value;
-         if(cardData[newPlayerCardIndex].value === 1){
-          aceShowed = true;
-          ace11Score = newPlayerScore + 10;
-         }
-         if(i === 1 && aceShowed){
-          ace11Score = newPlayerScore + 10;
-         }
-      // } else {
-      //   scoreAce = newPlayerScore += 1;
-      //   scoreAce11 = newPlayerScore += 11;
-      //   setRolledAce(true);
-      //   //setAceChoice(true);
-      //   //setAceCardIndex(newPlayerCardIndex);
-      // }
+      const playerCardIndex = dealRandomCard(newDealtCards);
+      playerStartingHand.push(playerCardIndex);
+      playerStartingScore += cardData[playerCardIndex].value;
+      // if we roll an ace, keep track of normal & ace score
+      if (cardData[playerCardIndex].value === 1) {
+        playerStartingAceShowed = true;
+        playerStartingAceScore = playerStartingScore + 10;
+      }
+      // ???
+      if (i === 1 && playerStartingAceShowed) {
+        playerStartingAceScore = playerStartingScore + 10;
+      }
 
       //dealer
-      const newDealerCardIndex = dealRandomCard(newDealtCards);
-      newDealerHand.push(newDealerCardIndex);
-      newDealerScore += cardData[newDealerCardIndex].value;
-    }
-    if(aceShowed){
-      setRolledAce(true);
-      setAce11Score(ace11Score);
-    }
-    // if(rolledAce){
-    //   setAce1Score(scoreAce);
-    //   setAce11Score(scoreAce11);
-    // }else{
-    setPlayerScore(newPlayerScore);
-    // }
+      const dealerCardIndex = dealRandomCard(newDealtCards);
+      dealerStartingHand.push(dealerCardIndex);
+      dealerStartingScore += cardData[dealerCardIndex].value;
 
-    setPlayerHand(newPlayerHand);
-    setDealerHand(newDealerHand);
-    setDealerScore(newDealerScore);
+      if (cardData[dealerCardIndex].value == 1) {
+        dealerAceBoolean = true;
+        dealerAce11Score = dealerStartingScore + 10;
+      }
+      if (i === 1 && dealerAceBoolean) {
+        dealerAce11Score = dealerStartingScore + 10;
+      }
+    }
+    if (playerStartingAceShowed) {
+      setRolledAce(true);
+      setAce11Score(playerStartingAceScore);
+    }
+    if (dealerAceBoolean) {
+      setDealerAce(true);
+      setDealerAceScore(dealerAce11Score);
+    }
+    setPlayerScore(playerStartingScore);
+    setPlayerHand(playerStartingHand);
+    setDealerHand(dealerStartingHand);
+    setDealerScore(dealerStartingScore);
     setDealtCards(newDealtCards);
   }
 
   // adds new card to players hand
   function addNewCard() {
-   // if (!aceChoice && playerTurn && !gameOver) {
     if (playerTurn && !gameOver) {
       // gets random card
       const newCardIndex = dealRandomCard(dealtCards);
@@ -177,15 +180,15 @@ function App() {
       if (newScore > 21) {
         setGameOver(true);
       }
-      if(rolledAce){
+      if (rolledAce) {
         let testScore = newScore + 10;
-        if(testScore > 21){
+        if (testScore > 21) {
           setRolledAce(false);
-        }else{
+        } else {
           setAce11Score(testScore);
         }
       }
-      
+
       setPlayerScore(newScore);
 
     }
@@ -197,91 +200,137 @@ function App() {
     setDealerHand([]);
     setDealerScore(0);
     setDealtCards(new Set());
-   // setAceChoice(false);
-   // setAceCardIndex(null);
     setRolledAce(false);
     setAce11Score(0);
+    setDealerAce(false);
+    setDealerAceScore(0);
     setPlayerTurn(true);
     setGameOver(false);
+    setBet(0);
     dealInitialCards();
   }
 
-  // sets hand with chosen ace value
-  // function handleAceChoice(value) {
-  //   setPlayerHand((prevHand) => [...prevHand, aceCardIndex]);
-  //   setPlayerScore((prevScore) => {
-  //     const newScore = prevScore + value;
-  //     if(newScore > 21 && value === 11){
-  //       newScore -=10;
-  //     }
-  //     if (newScore > 21){
-  //       setGameOver(true);
-  //     } 
-  //     return newScore;
-  //   });
-  //   setAceChoice(false);
-  //   setAceCardIndex(null);
-  // }
+  function newSession(){
+    setMoney(500);
+    clearHand();
+  }
 
   // stand = dealers turn
   function handleStand() {
     setPlayerTurn(false);
   }
 
-
+  // dealerAce = true
+  // dealerAceScore = dealerScore + 10
+  // if dealerAceScore (initial score) > 17 = STAND
+  // 
   function dealDealerCards() {
     // gets existing dealer hand
     let newDealerScore = dealerScore;
+    let newDealerAceScore = dealerAceScore;
     const newDealerHand = [...dealerHand];
-    // dealer must draw on 16 or less
-    while (newDealerScore < 17) {
-      const newCardIndex = dealRandomCard(dealtCards);
-      newDealerHand.push(newCardIndex);
-      newDealerScore += cardData[newCardIndex].value;
+
+    //if score + ace 11 > 17 stand 
+    //keep rolling until newDealerScore < 17 -> cross check w dealerAceScore
+
+    if (newDealerAceScore > 16) {
+      setDealerScore(newDealerScore);
+      setDealerHand(newDealerHand);
+      setDealerAceScore(newDealerAceScore);
+      setGameOver(true);
+    } else {
+      while ((newDealerAceScore > 21 && newDealerAceScore < 17) || newDealerScore < 17) {
+        //draw a card
+        const newCardIndex = dealRandomCard(dealtCards);
+        newDealerHand.push(newCardIndex);
+        newDealerScore += cardData[newCardIndex].value;
+        if (dealerAce) {
+          newDealerAceScore = newDealerScore + 10;
+        }
+        if (newDealerAceScore > 21) {
+          setDealerAce(false);
+        }
+
+      }
+      setDealerScore(newDealerScore);
+      setDealerHand(newDealerHand);
+      setDealerAceScore(newDealerAceScore);
+      setGameOver(true);
     }
-    setDealerHand(newDealerHand);
-    setDealerScore(newDealerScore);
-    setGameOver(true);
+
+
+    // while dealerScore < 17 and dealerAce <17 but less than 21
+    // add card
+    // if dealerAce
+
+    // dealer must draw on 16 or less
+    // while (newDealerScore < 17) {
+    //   const newCardIndex = dealRandomCard(dealtCards);
+    //   newDealerHand.push(newCardIndex);
+    //   newDealerScore += cardData[newCardIndex].value;
+
+    //   if(dealerAce){
+    //     let newDealerAceScore = newDealerScore+10;
+    //     if(newDealerAceScore > 17 && newDealerAceScore <= 21){
+    //       // break
+    //       setDealerAce(false);
+    //     }else{
+    //       setDealerAceScore(newDealerAceScore);
+
+    //     }
+
+
+    //   }
+
+    // }
+
+    // setDealerScore(newDealerScore);
+    // setDealerHand(newDealerHand);
+
+    // setGameOver(true);
   }
 
   function determineWinner() {
-    if(ace11Score>playerScore){
-      if (ace11Score > 21) return 'You lost!';
-      if (ace11Score > 21 || ace11Score > dealerScore) return 'You won!';
-      if (ace11Score < dealerScore) return 'You lost!';
-    }else{
-      if (playerScore > 21) return 'You lost!';
-      if (dealerScore > 21 || playerScore > dealerScore) return 'You won!';
-      if (playerScore < dealerScore) return 'You lost!';
-    }
+    const finalPlayerScore = rolledAce && ace11Score <= 21 ? ace11Score : playerScore;
+    const finalDealerScore = dealerAce && dealerAceScore <= 21 ? dealerAceScore : dealerScore;
+    if (finalPlayerScore > 21){
+     // setMoney((prevMoney) => prevMoney - bet);
+      return 'You lost!';
+    } 
+    if (finalDealerScore > 21 || finalPlayerScore > finalDealerScore){
+     // setMoney((prevMoney) => prevMoney + (bet*2));
+      return 'You won!';
+    } 
+    if (finalPlayerScore < finalDealerScore){
+      //setMoney((prevMoney) => prevMoney - bet);
+      return 'You lost!';
+    } 
     return 'It\'s a tie!';
   }
-//  <h1>Blackjack</h1>
+  //  <h1>Blackjack</h1>
   return (
     <div className="App">
-      <button onClick={clearHand}>New Game</button>
-      <p>Dealer's Hand ({gameOver ? dealerScore : '?'})</p>
+      <button onClick={clearHand}>New Round</button>
+      <button onClick={newSession}>New Session</button>
+      <p>Money: ${money}</p>
+     
+      {/*<p>Dealer's Hand ({gameOver ? dealerScore : '?'})</p>*/}
+      <p>Dealer's Hand ({gameOver ? (dealerAce && dealerAceScore > dealerScore ? dealerAceScore : dealerScore) : '?'})</p>
+      {/*(dealerAce && dealerAceScore <= 21 ? dealerAceScore : dealerScore)   <p>{dealerAceScore}</p>*/}
+
       <div className="hand">
         {dealerHand.map((c, index) =>
           index === 0 || gameOver ? (
             <Card key={index} card={cardData[c]} />
           ) : (
             <Card key={index} card={{ img: './cards/back.svg' }} />
+            
           )
         )}
       </div>
-     
-      <div className = "score">
-{/* 
-      {rolledAce && (
-        <p> {playerScore} / {ace11Score} </p>
-      )}
-      {rolledAce == false && (
-        <p> {playerScore} </p>
-      )}  */}
-       <p>{gameOver ? (rolledAce && ace11Score <= 21 ? ace11Score : playerScore) : (rolledAce ? `${playerScore} / ${ace11Score}` : playerScore)}</p>
 
-
+      <div className="score">
+        <p>{gameOver ? (rolledAce && ace11Score <= 21 ? ace11Score : playerScore) : (rolledAce ? `${playerScore} / ${ace11Score}` : playerScore)}</p>
       </div>
 
 
@@ -293,7 +342,7 @@ function App() {
       </div>
 
 
-      
+
       {/* {aceChoice && (
         <div>
           <button onClick={() => handleAceChoice(1)}>Count Ace as 1</button>
@@ -308,7 +357,7 @@ function App() {
           <button onClick={handleStand}>Stand</button>
         </div>
       )}
-      
+
       {gameOver && <h1>{determineWinner()}</h1>}
     </div>
   );
@@ -316,28 +365,12 @@ function App() {
 
 export default App;
 
-// soft aces pseudo solution
-/**
- * 
- * ROLLING ACE -> 1 count & 11 count once one goes over 21, show and count other
- * 
- * 
- * if u roll a ace, it shows either "soft x OR x"
- * keep count of aces
- * roll ace = softBoolean = true
- * 
- * if softBoolean = true and score > 21
- * score = score - 10
- * softBoolean = false
- * 
- * double ace gives 12
- * 
- * 
- * 
- * if we go over 21 and we have aces,
- * turn ace from 11 to 1 and remove it from ace count
- * after 1 ace, the other HAS to be a 1 anyways. 
- * 
- */
+// handle dealer aces
+// add betting and currency
 
-// dealer optimisation aswell
+// we know the players score once they stand
+// dealer
+// dealer ace = 1 (normal score)
+// dealer ace 2 = 11 (normal score + 10)
+// while hands are less than player score && 17
+// draw cards, update both scores. 

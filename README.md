@@ -26,3 +26,7 @@ June 6
 June 13
 - added back of card
 - handler for ace
+
+june 14
+- added ace for dealer
+- set up basis for money feature

@@ -30,3 +30,10 @@ June 13
 june 14
 - added ace for dealer
 - set up basis for money feature
+- session reset
+
+june 17
+- got bet working but having issues updating money once after game outcome
+- small issue where game isn't counting 8 2 ace as 21 but i think i've fixed i
+
+- got betting working where money updates after the rounds over and confirm button

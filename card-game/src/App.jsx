@@ -84,7 +84,12 @@ function App() {
   const [gameOver, setGameOver] = React.useState(false);
 
   const [money, setMoney] = React.useState(500);
-  const [bet, setBet] = React.useState(0);
+  const [bet, setBet] = React.useState('');
+
+  const [betConfirmed, setBetConfirmed] = React.useState(false);
+  
+
+  //const [gameStarted, setGameStarted] = React.useState(false);
 
   //enter amount then game begins
 
@@ -206,7 +211,10 @@ function App() {
     setDealerAceScore(0);
     setPlayerTurn(true);
     setGameOver(false);
-    setBet(0);
+    setBet('');
+    setBetConfirmed(false);
+
+    //setGameStarted(false);
     dealInitialCards();
   }
 
@@ -224,6 +232,9 @@ function App() {
   // dealerAceScore = dealerScore + 10
   // if dealerAceScore (initial score) > 17 = STAND
   // 
+
+
+  //bugs out on 8 2 ace
   function dealDealerCards() {
     // gets existing dealer hand
     let newDealerScore = dealerScore;
@@ -244,7 +255,7 @@ function App() {
         const newCardIndex = dealRandomCard(dealtCards);
         newDealerHand.push(newCardIndex);
         newDealerScore += cardData[newCardIndex].value;
-        if (dealerAce) {
+        if (dealerAce || cardData[newCardIndex].value === 1) {
           newDealerAceScore = newDealerScore + 10;
         }
         if (newDealerAceScore > 21) {
@@ -290,6 +301,18 @@ function App() {
     // setGameOver(true);
   }
 
+  //add bet winnings/losings
+
+  function win(bet){
+    setMoney(money + (bet*2));
+  }
+
+  function lose(bet){
+    setMoney(money - bet);
+  }
+
+
+
   function determineWinner() {
     const finalPlayerScore = rolledAce && ace11Score <= 21 ? ace11Score : playerScore;
     const finalDealerScore = dealerAce && dealerAceScore <= 21 ? dealerAceScore : dealerScore;
@@ -298,7 +321,10 @@ function App() {
       return 'You lost!';
     } 
     if (finalDealerScore > 21 || finalPlayerScore > finalDealerScore){
-     // setMoney((prevMoney) => prevMoney + (bet*2));
+      //const newMoney = money + (bet * 2);
+      //setMoney(600);
+      //setMoney((prevMoney) => prevMoney + (Number(bet)*2));
+      //setMoney(prevMoney => prevMoney + (bet * 2));
       return 'You won!';
     } 
     if (finalPlayerScore < finalDealerScore){
@@ -307,12 +333,64 @@ function App() {
     } 
     return 'It\'s a tie!';
   }
+
+  const handleBetChange = (event) => {
+    const value = event.target.value.trim(); // Remove leading/trailing spaces
+    const newBet = value === '' ? '' : Math.min(Math.max(Number(value), 1), money);
+    setBet(newBet);
+  };
+  
+  const handleBetEnter = (event) => {
+    if (event.key === 'Enter') {
+      const value = event.target.value.trim(); // Remove leading/trailing spaces
+      const newBet = value === '' ? '' : Math.min(Math.max(Number(value), 1), money);
+      setBet(newBet);
+    }
+  };
+
+  React.useEffect(() => {
+    if (gameOver && determineWinner() === 'You won!') {
+      win(bet); // Update money when player wins
+    }
+  }, [gameOver]);
+
+  React.useEffect(() => {
+    if (gameOver && determineWinner() === 'You lost!') {
+      lose(bet); // Update money when player wins
+    }
+  }, [gameOver]);
+
+
+  // Function to confirm the bet
+  const confirmBet = () => {
+    setBetConfirmed(true);
+  };
+  
+
+
   //  <h1>Blackjack</h1>
   return (
     <div className="App">
+  
       <button onClick={clearHand}>New Round</button>
       <button onClick={newSession}>New Session</button>
       <p>Money: ${money}</p>
+
+      <div className="bet">
+        <input
+          type="number"
+          name="betting"
+          min="1"
+          max={money}
+          value={bet}
+          onChange={handleBetChange}
+          onKeyDown={handleBetEnter}
+          disabled={betConfirmed} // Disable input if bet is confirmed
+          />
+          {!betConfirmed && ( // Show confirm button if bet is not confirmed
+            <button onClick={confirmBet}>Confirm</button>
+          )}
+      </div>
      
       {/*<p>Dealer's Hand ({gameOver ? dealerScore : '?'})</p>*/}
       <p>Dealer's Hand ({gameOver ? (dealerAce && dealerAceScore > dealerScore ? dealerAceScore : dealerScore) : '?'})</p>
@@ -328,6 +406,8 @@ function App() {
           )
         )}
       </div>
+
+      {bet > 0 && <div className="bet-display">Current Bet: ${bet}</div>}
 
       <div className="score">
         <p>{gameOver ? (rolledAce && ace11Score <= 21 ? ace11Score : playerScore) : (rolledAce ? `${playerScore} / ${ace11Score}` : playerScore)}</p>
@@ -359,6 +439,8 @@ function App() {
       )}
 
       {gameOver && <h1>{determineWinner()}</h1>}
+      
+      
     </div>
   );
 }

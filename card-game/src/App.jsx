@@ -371,11 +371,12 @@ function App() {
   //  <h1>Blackjack</h1>
   return (
     <div className="App">
-  
+      <buttons>
       <button onClick={clearHand}>New Round</button>
       <button onClick={newSession}>New Session</button>
+      </buttons>
       <p>Money: ${money}</p>
-
+      {/*
       <div className="bet">
         <input
           type="number"
@@ -391,6 +392,7 @@ function App() {
             <button onClick={confirmBet}>Confirm</button>
           )}
       </div>
+      */}
      
       {/*<p>Dealer's Hand ({gameOver ? dealerScore : '?'})</p>*/}
       <p>Dealer's Hand ({gameOver ? (dealerAce && dealerAceScore > dealerScore ? dealerAceScore : dealerScore) : '?'})</p>
@@ -407,7 +409,7 @@ function App() {
         )}
       </div>
 
-      {bet > 0 && <div className="bet-display">Current Bet: ${bet}</div>}
+      {/*bet > 0 && <div className="bet-display">Current Bet: ${bet}</div>*/}
 
       <div className="score">
         <p>{gameOver ? (rolledAce && ace11Score <= 21 ? ace11Score : playerScore) : (rolledAce ? `${playerScore} / ${ace11Score}` : playerScore)}</p>

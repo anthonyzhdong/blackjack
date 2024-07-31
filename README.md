@@ -1,4 +1,4 @@
-# Blackjack Game
+# Blackjack Game - Still in Development.
 
 ## Description
 A simple Blackjack game implemented in React. Players can place bets, draw cards, and compete against the dealer to reach a score of 21 without exceeding it.
@@ -15,18 +15,18 @@ A simple Blackjack game implemented in React. Players can place bets, draw cards
 To install and run this project locally, follow these steps:
 
 1. **Clone the repository**:
-   ```bash
+   ```
    git clone https://github.com/anthonyzhdong/blackjack.git
    cd blackjack/card-game
     ```
 
 2. **Install dependencies**:
-    ```bash
+    ```
     npm install
     ```
 
 3. **Run the program**
-    ```bash
+    ```
     npm run dev
     ```
 

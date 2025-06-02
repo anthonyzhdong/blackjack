@@ -462,6 +462,9 @@ function App() {
     resetGame();
   }
 
+  // Calculate total bets
+  const totalBets = playerHands.reduce((sum, hand) => sum + (hand.betConfirmed ? hand.bet : 0), 0);
+
   // Render game
   return (
     <div className="App">
@@ -472,12 +475,13 @@ function App() {
       
       <div className="money">
         <p>Money: ${money}</p>
+        {totalBets > 0 && <p>Total Bets: ${totalBets}</p>}
       </div>
       
       {/* Dealer's hand */}
       <div className="dealer-section">
-        <p>Dealer's Hand ({gamePhase === 'results' ? 
-          (dealerAce && dealerAceScore <= 21 ? dealerAceScore : dealerScore) : '?'})</p>
+        <h3>Dealer's Hand ({gamePhase === 'results' ? 
+          (dealerAce && dealerAceScore <= 21 ? dealerAceScore : dealerScore) : '?'})</h3>
         <div className="hand">
           {dealerHand.map((c, index) =>
             index === 0 || gamePhase === 'results' || gamePhase === 'dealer' ? (
@@ -489,100 +493,122 @@ function App() {
         </div>
       </div>
       
-      {/* Player's hands */}
-      <div className="player-hands">
-        {playerHands.map((hand, handIndex) => (
-          <div 
-            key={handIndex} 
-            className={`player-hand ${activeHandIndex === handIndex && gamePhase === 'playing' ? 'active-hand' : ''}`}
-          >
-            <div className="hand-header">
-              <p>Hand {handIndex + 1} 
-                {hand.score > 0 && ` (${hand.hasAce && hand.aceScore <= 21 ? 
-                  `${hand.score}/${hand.aceScore}` : hand.score})`}
-              </p>
-              
-              {gamePhase === 'betting' && (
-                <>
-                  {!hand.betConfirmed ? (
-                    <div className="bet-controls">
-                      <input
-                        type="number"
-                        min="1"
-                        max={money}
-                        value={hand.bet}
-                        onChange={(e) => updateBet(handIndex, parseInt(e.target.value) || 0)}
-                        disabled={hand.betConfirmed}
-                      />
-                      <button 
-                        onClick={() => confirmBet(handIndex)}
-                        disabled={hand.bet <= 0}
-                      >
-                        Confirm Bet
-                      </button>
-                    </div>
-                  ) : (
-                    <p>Bet: ${hand.bet}</p>
-                  )}
-                </>
-              )}
-              
-              {gamePhase !== 'betting' && (
-                <p>Bet: ${hand.bet}</p>
-              )}
-              
-              {gamePhase === 'results' && hand.result && (
-                <p className={`result ${hand.result}`}>
-                  {hand.result === 'blackjack' ? 'Blackjack!' :
-                   hand.result === 'win' ? 'You won!' :
-                   hand.result === 'lose' ? 'You lost!' : 'Push'}
-                </p>
-              )}
-            </div>
-            
-            <div className="cards">
-              {hand.cards.map((c, cardIndex) => (
-                <Card key={cardIndex} card={cardData[c]} />
-              ))}
-            </div>
-            
-            {gamePhase === 'playing' && activeHandIndex === handIndex && !hand.finished && (
-              <div className="hand-controls">
-                <button onClick={hit}>Hit</button>
-                <button onClick={stand}>Stand</button>
-              </div>
-            )}
-            
-            {gamePhase === 'betting' && (
-              <div className="hand-management">
-                {handIndex === playerHands.length - 1 && playerHands.length < 3 && (
-                  <button onClick={addHand}>Add Hand</button>
-                )}
-                {playerHands.length > 1 && !hand.betConfirmed && (
-                  <button onClick={() => removeHand(handIndex)}>Remove Hand</button>
-                )}
-              </div>
-            )}
+      {/* Player section */}
+      <div className="player-section">
+        {/* Hand management controls - outside of hand boxes */}
+        {gamePhase === 'betting' && (
+          <div className="hand-management-controls">
+            <button 
+              className="add-hand-btn"
+              onClick={addHand} 
+              disabled={playerHands.length >= 3}
+            >
+              Add Hand ({playerHands.length}/3)
+            </button>
           </div>
-        ))}
+        )}
+        
+        {/* Player's hands */}
+        <div className="player-hands">
+          {playerHands.map((hand, handIndex) => (
+            <div 
+              key={handIndex} 
+              className={`player-hand ${activeHandIndex === handIndex && gamePhase === 'playing' ? 'active-hand' : ''}`}
+            >
+              <div className="hand-header">
+                <p className="hand-title">
+                  Hand {handIndex + 1}
+                  {hand.score > 0 && ` (${hand.hasAce && hand.aceScore <= 21 ? 
+                    `${hand.score}/${hand.aceScore}` : hand.score})`}
+                </p>
+                
+                {gamePhase === 'betting' && (
+                  <>
+                    {!hand.betConfirmed ? (
+                      <div className="bet-controls">
+                        <input
+                          type="number"
+                          min="1"
+                          max={money}
+                          value={hand.bet}
+                          onChange={(e) => updateBet(handIndex, parseInt(e.target.value) || 0)}
+                          placeholder="Bet amount"
+                        />
+                        <button 
+                          onClick={() => confirmBet(handIndex)}
+                          disabled={hand.bet <= 0 || hand.bet > money}
+                        >
+                          Confirm Bet
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="bet-display">Bet: ${hand.bet}</p>
+                    )}
+                  </>
+                )}
+                
+                {gamePhase !== 'betting' && (
+                  <p className="bet-display">Bet: ${hand.bet}</p>
+                )}
+                
+                {gamePhase === 'results' && hand.result && (
+                  <p className={`result ${hand.result}`}>
+                    {hand.result === 'blackjack' ? `Blackjack! +$${Math.floor(hand.bet * 1.5)}` :
+                     hand.result === 'win' ? `You Won! +$${hand.bet}` :
+                     hand.result === 'lose' ? `You Lost! -$${hand.bet}` : 'Push'}
+                  </p>
+                )}
+              </div>
+              
+              <div className="cards">
+                {hand.cards.map((c, cardIndex) => (
+                  <Card key={cardIndex} card={cardData[c]} />
+                ))}
+              </div>
+              
+              {gamePhase === 'playing' && activeHandIndex === handIndex && !hand.finished && (
+                <div className="hand-controls">
+                  <button onClick={hit}>Hit</button>
+                  <button onClick={stand}>Stand</button>
+                </div>
+              )}
+              
+              {gamePhase === 'betting' && playerHands.length > 1 && !hand.betConfirmed && (
+                <button 
+                  className="remove-hand-btn"
+                  onClick={() => removeHand(handIndex)}
+                >
+                  Remove Hand
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+        
+        {/* Game controls */}
+        {gamePhase === 'betting' && (
+          <div className="game-controls">
+            <button 
+              onClick={startDeal}
+              disabled={!playerHands.every(hand => hand.betConfirmed) || totalBets > money}
+            >
+              Deal Cards
+            </button>
+          </div>
+        )}
+        
+        {gamePhase === 'playing' && (
+          <div className="game-controls">
+            <p>Playing Hand {activeHandIndex + 1}</p>
+          </div>
+        )}
+        
+        {gamePhase === 'results' && (
+          <div className="game-controls">
+            <button onClick={newRound}>Next Round</button>
+          </div>
+        )}
       </div>
-      
-      {gamePhase === 'betting' && (
-        <div className="game-controls">
-          <button 
-            onClick={startDeal}
-            disabled={!playerHands.every(hand => hand.betConfirmed)}
-          >
-            Deal Cards
-          </button>
-        </div>
-      )}
-      
-      {gamePhase === 'results' && (
-        <div className="game-controls">
-          <button onClick={newRound}>Next Round</button>
-        </div>
-      )}
     </div>
   );
 }

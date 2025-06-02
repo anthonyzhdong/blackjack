@@ -61,25 +61,6 @@ const cardData = [
 
 function App() {
   //player hand
-
-  const [playerHands, setPlayerHands] = React.useState([
-    {
-      cards: [],
-      score: 0,
-      aceScore: 0,
-      hasAce: false,
-      bet: 0,
-      betConfirmed: false,
-      finished: false,
-      result: null
-    }
-  ]);
-
-  const [gamePhase, setGamePhase] = React.useState('betting');
-  // phases : betting, playing, dealer, results
-  const [activeHandIndex, setActiveHandIndex] = React.useState(0);
-
-  
   const [playerScore, setPlayerScore] = React.useState(0);
   const [playerHand, setPlayerHand] = React.useState([]);
 
@@ -91,8 +72,8 @@ function App() {
   const [dealtCards, setDealtCards] = React.useState(new Set());
 
   //did we roll an ace? If we did, keep a track of score using ace (11)
-  // const [rolledAce, setRolledAce] = React.useState(false);
-  // const [ace11Score, setAce11Score] = React.useState(0);
+  const [rolledAce, setRolledAce] = React.useState(false);
+  const [ace11Score, setAce11Score] = React.useState(0);
 
   //did the dealer roll an ace? If they did, keep a track of score using ace (11)
   const [dealerAce, setDealerAce] = React.useState(false);
